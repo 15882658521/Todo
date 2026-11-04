@@ -106,6 +106,22 @@
 
   button[type="submit"]:hover { background: var(--accent-strong); }
 
+  /* 批量删除按钮：位于「添加」之后，删除已勾选的条目 */
+  #del-done {
+    flex: 0 0 auto;
+    padding: 0 20px;
+    font-family: inherit;
+    font-size: .95rem;
+    color: #FFFFFF;
+    background: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: filter .16s ease;
+  }
+
+  #del-done:hover { filter: brightness(.92); }
+
   /* 列表 */
   ul {
     list-style: none;
@@ -131,11 +147,26 @@
 
   li:last-child { border-bottom: none; }
 
+  li .check {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
   li .text {
     flex: 1 1 auto;
     min-width: 0;
     padding: 8px 0;
     word-break: break-word;
+  }
+
+  /* 勾选完成后文字变灰加划线 */
+  li.done .text {
+    color: var(--faint);
+    text-decoration: line-through;
   }
 
   /* 删除按钮：文字按钮，高度占满 44px 保证好点 */
@@ -224,6 +255,7 @@
     <input type="text" id="new-task" placeholder="写下一件要做的事" autocomplete="off" maxlength="120" aria-label="待办内容">
     <input type="date" id="task-date" aria-label="待办日期">
     <button type="submit">添加</button>
+    <button type="button" id="del-done" aria-label="删除已勾选的待办">删除</button>
   </form>
 
   <ul id="list" aria-label="待办事项"></ul>
@@ -249,6 +281,14 @@
 
     var li = document.createElement('li');
 
+    var check = document.createElement('input');
+    check.type = 'checkbox';
+    check.className = 'check';
+    check.setAttribute('aria-label', '标记完成：' + text);
+    check.addEventListener('change', function () {
+      li.classList.toggle('done', check.checked);   // 勾选后整条变划线态
+    });
+
     var span = document.createElement('span');
     span.className = 'text';
     span.textContent = text;             // 用 textContent，不拼 HTML，防止注入
@@ -262,12 +302,23 @@
       li.remove();                       // 把这个 <li> 从页面上摘掉
     });
 
+    li.prepend(check);                              // 勾选框在最前面
     li.appendChild(span);
     li.appendChild(del);
     list.appendChild(li);
 
     input.value = '';                    // 加完清空输入框
     input.focus();                       // 焦点留在输入框，方便连续添加
+  });
+
+  /* ---------- 「删除」按钮：清掉所有已勾选的条目 ---------- */
+  var delDoneBtn = document.getElementById('del-done');
+
+  delDoneBtn.addEventListener('click', function () {
+    var checked = list.querySelectorAll('li .check:checked');
+    for (var i = 0; i < checked.length; i++) {
+      checked[i].closest('li').remove();
+    }
   });
 
   /* ---------- 深色 / 浅色模式 ---------- */
