@@ -84,13 +84,49 @@
   ul:empty { display: none; }
 
   li {
-    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 10px 6px 16px;
     border-bottom: 1px solid #E3E7E1;
     font-size: .97rem;
-    word-break: break-word;
   }
 
   li:last-child { border-bottom: none; }
+
+  li .text {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 8px 0;
+    word-break: break-word;
+  }
+
+  /* 删除按钮：文字按钮，高度占满 44px 保证好点 */
+  .del {
+    flex: 0 0 auto;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    font-family: inherit;
+    font-size: .86rem;
+    color: #8A948F;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color .16s ease, background .16s ease;
+  }
+
+  .del:hover {
+    color: #B4453C;
+    background: #F7EDEB;
+  }
+
+  :focus-visible { outline: 2px solid #3F7D62; outline-offset: 2px; }
 
   .note {
     margin-top: 30px;
@@ -111,7 +147,7 @@
 
   <ul id="list" aria-label="待办事项"></ul>
 
-  <p class="note">当前版本只支持添加，刷新页面会清空。</p>
+  <p class="note">当前版本支持添加和删除，刷新页面会清空。</p>
 </div>
 
 <script>
@@ -129,7 +165,22 @@
     }
 
     var li = document.createElement('li');
-    li.textContent = text;               // 用 textContent，不拼 HTML，防止注入
+
+    var span = document.createElement('span');
+    span.className = 'text';
+    span.textContent = text;             // 用 textContent，不拼 HTML，防止注入
+
+    var del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'del';
+    del.textContent = '删除';
+    del.setAttribute('aria-label', '删除：' + text);
+    del.addEventListener('click', function () {
+      li.remove();                       // 把这个 <li> 从页面上摘掉
+    });
+
+    li.appendChild(span);
+    li.appendChild(del);
     list.appendChild(li);
 
     input.value = '';                    // 加完清空输入框
