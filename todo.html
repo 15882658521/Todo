@@ -106,6 +106,25 @@
 
   button[type="submit"]:hover { background: var(--accent-strong); }
 
+  /* 导出按钮：把清单存成 txt 文件 */
+  #export-btn {
+    flex: 0 0 auto;
+    padding: 0 20px;
+    font-family: inherit;
+    font-size: .95rem;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: color .16s ease, border-color .16s ease;
+  }
+
+  #export-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
   /* 列表 */
   ul {
     list-style: none;
@@ -224,6 +243,7 @@
     <input type="text" id="new-task" placeholder="写下一件要做的事" autocomplete="off" maxlength="120" aria-label="待办内容">
     <input type="date" id="task-date" aria-label="待办日期">
     <button type="submit">添加</button>
+    <button type="button" id="export-btn" aria-label="导出待办清单为 txt 文件">导出</button>
   </form>
 
   <ul id="list" aria-label="待办事项"></ul>
@@ -268,6 +288,35 @@
 
     input.value = '';                    // 加完清空输入框
     input.focus();                       // 焦点留在输入框，方便连续添加
+  });
+
+  /* ---------- 导出为 txt ---------- */
+  var exportBtn = document.getElementById('export-btn');
+
+  exportBtn.addEventListener('click', function () {
+    var items = list.querySelectorAll('li');
+    if (!items.length) {                  // 空清单不导出，避免生成空文件
+      input.focus();
+      return;
+    }
+
+    var lines = [];
+    for (var i = 0; i < items.length; i++) {
+      var t = items[i].querySelector('.text');
+      if (t) lines.push(t.textContent);
+    }
+
+    // \ufeff 是 BOM，让 Windows 记事本正确识别 UTF-8，中文不乱码
+    var blob = new Blob(['\ufeff' + lines.join('\n') + '\n'], { type: 'text/plain;charset=utf-8' });
+
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '待办清单.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);            // 用完释放内存
   });
 
   /* ---------- 深色 / 浅色模式 ---------- */
