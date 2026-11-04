@@ -6,14 +6,45 @@
 <title>待办清单</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233F7D62'/%3E%3Cpath d='M9 16.5l5 5 9-10' fill='none' stroke='%23FBFCFA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
+  /* 颜色全部收进变量：切主题时只换这一处，其它样式不用动 */
+  :root {
+    --bg: #FAFAF7;
+    --card: #FFFFFF;
+    --ink: #1F2A24;
+    --muted: #6C7873;
+    --faint: #9AA5A0;
+    --line: #E3E7E1;
+    --accent: #3F7D62;
+    --accent-strong: #376E57;
+    --danger: #B4453C;
+    --danger-bg: #F7EDEB;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .06);
+    color-scheme: light;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #151917;
+    --card: #1E2422;
+    --ink: #E8EDEA;
+    --muted: #94A19B;
+    --faint: #6E7B75;
+    --line: #2C3431;
+    --accent: #5AA57C;
+    --accent-strong: #6CB48C;
+    --danger: #E08076;
+    --danger-bg: rgba(224, 128, 118, .12);
+    --shadow: 0 1px 3px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    padding: 0 18px 40px;
+    padding: 0 18px 72px;
     min-height: 100vh;
-    background: #FAFAF7;
-    color: #1F2A24;
+    background: var(--bg);
+    color: var(--ink);
     font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     font-size: 16px;
     line-height: 1.6;
@@ -30,7 +61,7 @@
 
   .tip {
     margin: 0 0 22px;
-    color: #6C7873;
+    color: var(--muted);
     font-size: .92rem;
   }
 
@@ -46,15 +77,15 @@
     padding: 12px 14px;
     font-family: inherit;
     font-size: 16px;
-    color: #1F2A24;
-    background: #FFFFFF;
-    border: 1px solid #E3E7E1;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
     border-radius: 8px;
     outline: none;
   }
 
-  input[type="text"]::placeholder { color: #9AA5A0; }
-  input[type="text"]:focus { border-color: #3F7D62; }
+  input[type="text"]::placeholder { color: var(--faint); }
+  input[type="text"]:focus { border-color: var(--accent); }
 
   button[type="submit"] {
     flex: 0 0 auto;
@@ -62,21 +93,21 @@
     font-family: inherit;
     font-size: .95rem;
     color: #FFFFFF;
-    background: #3F7D62;
-    border: 1px solid #3F7D62;
+    background: var(--accent);
+    border: 1px solid var(--accent);
     border-radius: 8px;
     cursor: pointer;
   }
 
-  button[type="submit"]:hover { background: #376E57; }
+  button[type="submit"]:hover { background: var(--accent-strong); }
 
   /* 列表 */
   ul {
     list-style: none;
     margin: 18px 0 0;
     padding: 0;
-    background: #FFFFFF;
-    border: 1px solid #E3E7E1;
+    background: var(--card);
+    border: 1px solid var(--line);
     border-radius: 10px;
     overflow: hidden;
   }
@@ -89,7 +120,7 @@
     justify-content: space-between;
     gap: 8px;
     padding: 6px 10px 6px 16px;
-    border-bottom: 1px solid #E3E7E1;
+    border-bottom: 1px solid var(--line);
     font-size: .97rem;
   }
 
@@ -113,7 +144,7 @@
     padding: 0 10px;
     font-family: inherit;
     font-size: .86rem;
-    color: #8A948F;
+    color: var(--faint);
     background: transparent;
     border: none;
     border-radius: 6px;
@@ -122,16 +153,53 @@
   }
 
   .del:hover {
-    color: #B4453C;
-    background: #F7EDEB;
+    color: var(--danger);
+    background: var(--danger-bg);
   }
-
-  :focus-visible { outline: 2px solid #3F7D62; outline-offset: 2px; }
 
   .note {
     margin-top: 30px;
-    color: #6C7873;
+    color: var(--muted);
     font-size: .88rem;
+  }
+
+  /* 主题开关：固定在视口左下角 */
+  .theme-toggle {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    font-size: .84rem;
+    letter-spacing: .04em;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: color .16s ease, border-color .16s ease, background .16s ease;
+  }
+
+  .theme-toggle:hover {
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* 切主题时颜色平滑过渡，不要突兀地闪一下 */
+  body, ul, input[type="text"], .theme-toggle {
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
   }
 </style>
 </head>
@@ -149,6 +217,8 @@
 
   <p class="note">当前版本支持添加和删除，刷新页面会清空。</p>
 </div>
+
+<button type="button" class="theme-toggle" id="theme-toggle" aria-label="切换到深色模式">深色</button>
 
 <script>
   var form  = document.getElementById('add-form');
@@ -185,6 +255,43 @@
 
     input.value = '';                    // 加完清空输入框
     input.focus();                       // 焦点留在输入框，方便连续添加
+  });
+
+  /* ---------- 深色 / 浅色模式 ---------- */
+  var THEME_KEY = 'todo-list.theme';
+  var themeBtn = document.getElementById('theme-toggle');
+
+  // 换主题就是把 html 上的 data-theme 改掉，CSS 变量会自动跟着变
+  function applyTheme(mode) {
+    document.documentElement.setAttribute('data-theme', mode);
+    themeBtn.textContent = mode === 'dark' ? '浅色' : '深色';
+    themeBtn.setAttribute('aria-label', mode === 'dark' ? '切换到浅色模式' : '切换到深色模式');
+  }
+
+  function savedTheme() {
+    try {
+      var saved = localStorage.getItem(THEME_KEY);
+      if (saved === 'dark' || saved === 'light') return saved;
+    } catch (e) { /* 读不到就用系统偏好 */ }
+
+    // 没存过：跟随系统设置
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  }
+
+  function saveTheme(mode) {
+    try { localStorage.setItem(THEME_KEY, mode); } catch (e) { /* 存不进就算了 */ }
+  }
+
+  applyTheme(savedTheme());
+
+  themeBtn.addEventListener('click', function () {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var next = isDark ? 'light' : 'dark';
+    applyTheme(next);
+    saveTheme(next);
   });
 </script>
 </body>
