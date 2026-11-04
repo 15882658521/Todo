@@ -43,7 +43,9 @@
     margin: 0;
     padding: 0 18px 72px;
     min-height: 100vh;
-    background: var(--bg);
+    background:
+      radial-gradient(1000px 420px at 50% -190px, rgba(63, 125, 98, .14), transparent 70%),
+      var(--bg);
     color: var(--ink);
     font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     font-size: 16px;
@@ -57,6 +59,17 @@
     font-size: 1.9rem;
     font-weight: 600;
     letter-spacing: .03em;
+  }
+
+  /* 标题下的短色条，让头部不至于太素 */
+  h1::after {
+    content: "";
+    display: block;
+    width: 42px;
+    height: 3px;
+    margin-top: 12px;
+    border-radius: 99px;
+    background: var(--accent);
   }
 
   .tip {
@@ -87,7 +100,10 @@
 
   input[type="text"]::placeholder { color: var(--faint); }
   input[type="text"]:focus,
-  input[type="date"]:focus { border-color: var(--accent); }
+  input[type="date"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(63, 125, 98, .16);
+  }
 
   /* 日期框按内容宽度显示，不参与拉伸 */
   input[type="date"] { flex: 0 0 auto; }
@@ -141,15 +157,14 @@
     border-color: var(--accent);
   }
 
-  /* 列表 */
+  /* 列表：每条待办独立成一张卡片 */
   ul {
     list-style: none;
-    margin: 18px 0 0;
+    margin: 20px 0 0;
     padding: 0;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
   ul:empty { display: none; }
@@ -157,14 +172,32 @@
   li {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 6px 10px 6px 16px;
-    border-bottom: 1px solid var(--line);
+    gap: 10px;
+    padding: 12px 12px 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
     font-size: .97rem;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background-color .2s ease, color .2s ease;
   }
 
-  li:last-child { border-bottom: none; }
+  li:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .08);
+  }
+
+  /* 已完成的条目：左边条转灰、整体压暗 */
+  li.done {
+    border-left-color: var(--line);
+    opacity: .72;
+  }
+
+  li.done:hover {
+    transform: none;
+    box-shadow: var(--shadow);
+  }
 
   li .check {
     flex: 0 0 auto;
@@ -186,6 +219,47 @@
   li.done .text {
     color: var(--faint);
     text-decoration: line-through;
+  }
+
+  /* 日期标签：排在事项文字后面 */
+  li .due {
+    flex: 0 0 auto;
+    padding: 3px 9px;
+    font-size: .78rem;
+    letter-spacing: .02em;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+
+  /* 日期已过：换成提醒色 */
+  li .due.overdue {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-color: var(--danger);
+  }
+
+  li.done .due { text-decoration: line-through; }
+
+  /* 计数行 */
+  .stats {
+    margin: 22px 0 0;
+    color: var(--muted);
+    font-size: .88rem;
+  }
+
+  /* 空状态占位 */
+  .empty {
+    margin: 20px 0 0;
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--faint);
+    font-size: .92rem;
+    background: var(--card);
+    border: 1px dashed var(--line);
+    border-radius: 12px;
   }
 
   /* 删除按钮：文字按钮，高度占满 44px 保证好点 */
@@ -278,9 +352,13 @@
     <button type="button" id="export-btn" aria-label="导出待办清单为 txt 文件">导出</button>
   </form>
 
+  <p class="stats" id="stats" hidden></p>
+
   <ul id="list" aria-label="待办事项"></ul>
 
-  <p class="note">当前版本支持添加和删除，刷新页面会清空。</p>
+  <p class="empty" id="empty">清单还是空的，写下第一件事，点「添加」。</p>
+
+  <p class="note">支持添加、勾选完成、日期标记、批量删除与导出 txt；刷新页面会清空。</p>
 </div>
 
 <button type="button" class="theme-toggle" id="theme-toggle" aria-label="切换到深色模式">深色</button>
@@ -289,6 +367,31 @@
   var form  = document.getElementById('add-form');
   var input = document.getElementById('new-task');
   var list  = document.getElementById('list');
+  var dateBox = document.getElementById('task-date');
+  var statsEl = document.getElementById('stats');
+  var emptyEl = document.getElementById('empty');
+
+  // 本地今天的 YYYY-MM-DD，用于判断日期是否已过期
+  function todayISO() {
+    var t = new Date();
+    var m = String(t.getMonth() + 1).padStart(2, '0');
+    var d = String(t.getDate()).padStart(2, '0');
+    return t.getFullYear() + '-' + m + '-' + d;
+  }
+
+  // 更新计数行与空状态
+  function refresh() {
+    var items = list.querySelectorAll('li');
+    if (!items.length) {
+      statsEl.hidden = true;
+      emptyEl.hidden = false;
+      return;
+    }
+    emptyEl.hidden = true;
+    statsEl.hidden = false;
+    var done = list.querySelectorAll('li.done').length;
+    statsEl.textContent = '共 ' + items.length + ' 项 · 已完成 ' + done + ' · 未完成 ' + (items.length - done);
+  }
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();                 // 阻止表单默认的刷新行为
@@ -307,11 +410,21 @@
     check.setAttribute('aria-label', '标记完成：' + text);
     check.addEventListener('change', function () {
       li.classList.toggle('done', check.checked);   // 勾选后整条变划线态
+      refresh();
     });
 
     var span = document.createElement('span');
     span.className = 'text';
     span.textContent = text;             // 用 textContent，不拼 HTML，防止注入
+
+    // 日期标签：选了日期就显示在事项后面，已过期标成提醒色
+    var due = dateBox.value;
+    if (due) {
+      var chip = document.createElement('span');
+      chip.className = 'due' + (due < todayISO() ? ' overdue' : '');
+      chip.textContent = due;
+      li.dataset.due = due;
+    }
 
     var del = document.createElement('button');
     del.type = 'button';
@@ -320,15 +433,18 @@
     del.setAttribute('aria-label', '删除：' + text);
     del.addEventListener('click', function () {
       li.remove();                       // 把这个 <li> 从页面上摘掉
+      refresh();
     });
 
     li.prepend(check);                              // 勾选框在最前面
     li.appendChild(span);
+    if (due) li.appendChild(chip);                  // 文字后面跟日期标签
     li.appendChild(del);
     list.appendChild(li);
 
-    input.value = '';                    // 加完清空输入框
+    input.value = '';                    // 加完清空输入框（日期保留，方便连续添加同一天的事）
     input.focus();                       // 焦点留在输入框，方便连续添加
+    refresh();
   });
 
   /* ---------- 「删除」按钮：清掉所有已勾选的条目 ---------- */
@@ -339,6 +455,7 @@
     for (var i = 0; i < checked.length; i++) {
       checked[i].closest('li').remove();
     }
+    refresh();
   });
 
   /* ---------- 导出为 txt ---------- */
@@ -354,7 +471,9 @@
     var lines = [];
     for (var i = 0; i < items.length; i++) {
       var t = items[i].querySelector('.text');
-      if (t) lines.push(t.textContent);
+      if (!t) continue;
+      var d = items[i].dataset.due;
+      lines.push(t.textContent + (d ? ' (' + d + ')' : ''));
     }
 
     // \ufeff 是 BOM，让 Windows 记事本正确识别 UTF-8，中文不乱码
@@ -399,6 +518,7 @@
   }
 
   applyTheme(savedTheme());
+  refresh();                             // 初始为空清单：显示空状态提示
 
   themeBtn.addEventListener('click', function () {
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
