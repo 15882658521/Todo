@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>待办清单</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233F7D62'/%3E%3Cpath d='M9 16.5l5 5 9-10' fill='none' stroke='%23FBFCFA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0 18px 40px;
+    min-height: 100vh;
+    background: #FAFAF7;
+    color: #1F2A24;
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .shell { max-width: 600px; margin: 0 auto; }
+
+  h1 {
+    margin: 48px 0 6px;
+    font-size: 1.9rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+  }
+
+  .tip {
+    margin: 0 0 22px;
+    color: #6C7873;
+    font-size: .92rem;
+  }
+
+  /* 输入区：输入框 + 添加按钮 */
+  form {
+    display: flex;
+    gap: 8px;
+  }
+
+  input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 16px;
+    color: #1F2A24;
+    background: #FFFFFF;
+    border: 1px solid #E3E7E1;
+    border-radius: 8px;
+    outline: none;
+  }
+
+  input[type="text"]::placeholder { color: #9AA5A0; }
+  input[type="text"]:focus { border-color: #3F7D62; }
+
+  button[type="submit"] {
+    flex: 0 0 auto;
+    padding: 0 20px;
+    font-family: inherit;
+    font-size: .95rem;
+    color: #FFFFFF;
+    background: #3F7D62;
+    border: 1px solid #3F7D62;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  button[type="submit"]:hover { background: #376E57; }
+
+  /* 列表 */
+  ul {
+    list-style: none;
+    margin: 18px 0 0;
+    padding: 0;
+    background: #FFFFFF;
+    border: 1px solid #E3E7E1;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  ul:empty { display: none; }
+
+  li {
+    padding: 13px 16px;
+    border-bottom: 1px solid #E3E7E1;
+    font-size: .97rem;
+    word-break: break-word;
+  }
+
+  li:last-child { border-bottom: none; }
+
+  .note {
+    margin-top: 30px;
+    color: #6C7873;
+    font-size: .88rem;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <h1>待办清单</h1>
+  <p class="tip">写下一件要做的事，添加到下面的清单里。</p>
+
+  <form id="add-form">
+    <input type="text" id="new-task" placeholder="写下一件要做的事" autocomplete="off" maxlength="120" aria-label="待办内容">
+    <button type="submit">添加</button>
+  </form>
+
+  <ul id="list" aria-label="待办事项"></ul>
+
+  <p class="note">当前版本只支持添加，刷新页面会清空。</p>
+</div>
+
+<script>
+  var form  = document.getElementById('add-form');
+  var input = document.getElementById('new-task');
+  var list  = document.getElementById('list');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();                 // 阻止表单默认的刷新行为
+
+    var text = input.value.trim();
+    if (!text) {                        // 空内容不加
+      input.focus();
+      return;
+    }
+
+    var li = document.createElement('li');
+    li.textContent = text;               // 用 textContent，不拼 HTML，防止注入
+    list.appendChild(li);
+
+    input.value = '';                    // 加完清空输入框
+    input.focus();                       // 焦点留在输入框，方便连续添加
+  });
+</script>
+</body>
+</html>
