@@ -18,6 +18,8 @@
     --accent-strong: #376E57;
     --danger: #B4453C;
     --danger-bg: #F7EDEB;
+    --info: #3B6EA5;
+    --info-strong: #33618F;
     --shadow: 0 1px 2px rgba(0, 0, 0, .06);
     color-scheme: light;
   }
@@ -33,6 +35,8 @@
     --accent-strong: #6CB48C;
     --danger: #E08076;
     --danger-bg: rgba(224, 128, 118, .12);
+    --info: #4C86C4;
+    --info-strong: #5E97D6;
     --shadow: 0 1px 3px rgba(0, 0, 0, .35);
     color-scheme: dark;
   }
@@ -144,17 +148,17 @@
     padding: 0 20px;
     font-family: inherit;
     font-size: .95rem;
-    color: var(--ink);
-    background: transparent;
-    border: 1px solid var(--line);
+    color: #FFFFFF;
+    background: var(--info);
+    border: 1px solid var(--info);
     border-radius: 8px;
     cursor: pointer;
-    transition: color .16s ease, border-color .16s ease;
+    transition: background-color .16s ease, border-color .16s ease;
   }
 
   #export-btn:hover {
-    color: var(--accent);
-    border-color: var(--accent);
+    background: var(--info-strong);
+    border-color: var(--info-strong);
   }
 
   /* 列表：每条待办独立成一张卡片 */
